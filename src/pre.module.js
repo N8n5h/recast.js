@@ -311,6 +311,26 @@ var workerMain = function(event) {
         });
       }));
       break;
+    
+    case 'get_rcPolyMesh':
+      recast.get_rcPolyMesh(recast.cb(function(data) {
+        postMessage({
+          type: message.type,
+          data: Array.prototype.slice.call(arguments),
+          callback: message.callback
+        });
+      }));
+      break;
+
+    case 'get_rcPolyMeshDetail':
+      recast.get_rcPolyMeshDetail(recast.cb(function(data) {
+        postMessage({
+          type: message.type,
+          data: Array.prototype.slice.call(arguments),
+          callback: message.callback
+        });
+      }));
+      break;
 
     case 'OBJLoader':
       recast.OBJLoader(message.data, function() {

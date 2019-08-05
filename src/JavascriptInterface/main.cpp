@@ -771,6 +771,211 @@ void getNavMeshVertices(int callback){
     invoke_generic_callback_string(callback, data.c_str());
 }
 
+//*  struct rcPolyMesh
+//*  {
+//*  	unsigned short* verts;	///< The mesh vertices. [Form: (x, y, z) * #nverts]
+//*  	unsigned short* polys;	///< Polygon and neighbor data. [Length: #maxpolys * 2 * #nvp]
+//*  	unsigned short* regs;	///< The region id assigned to each polygon. [Length: #maxpolys] // missing
+//*  	unsigned short* flags;	///< The user defined flags for each polygon. [Length: #maxpolys] // missing
+//*  	unsigned char* areas;	///< The area id assigned to each polygon. [Length: #maxpolys] // missing
+//*  	int nverts;				///< The number of vertices.
+//*  	int npolys;				///< The number of polygons.
+//*  	int maxpolys;			///< The number of allocated polygons. // missing
+//*  	int nvp;				///< The maximum number of vertices per polygon.
+//*  	float bmin[3];			///< The minimum bounds in world space. [(x, y, z)]
+//*  	float bmax[3];			///< The maximum bounds in world space. [(x, y, z)]
+//*  	float cs;				///< The size of each cell. (On the xz-plane.)
+//*  	float ch;				///< The height of each cell. (The minimum increment along the y-axis.)
+//*  	int borderSize;			///< The AABB border size used to generate the source data from which the mesh was derived. // missing
+//*  	float maxEdgeError;		///< The max error of the polygon edges in the mesh. // missing
+//*  };
+
+void get_rcPolyMesh(int callback){
+
+    const int nvp = m_pmesh->nvp;
+    const float cs = m_pmesh->cs;
+    const float ch = m_pmesh->ch;
+    const float* orig = m_pmesh->bmin;
+    const float* bmin = m_pmesh->bmin;
+    const float* bmax = m_pmesh->bmax;
+    unsigned short* polys = m_pmesh->polys;
+    unsigned short* verts = m_pmesh->verts;
+
+    std::string data;
+
+    data = "{";
+
+    // verts
+	data += "\"verts\":[";
+
+    for (int i = 0; i < (m_pmesh->nverts * 3); i++)
+    {
+        char item[32];
+
+        sprintf(item, "%i,", verts[i]);
+
+        data += item;
+    }
+    if (data.compare(data.size()-1, 1, ",") == 0) {
+        data = data.substr(0, data.size()-1);
+    }
+
+    data += " ]";
+
+    // boundbox
+
+    data += ",\"boundbox\":{";
+
+	char min[64];
+
+	sprintf(min, "\"bmin\":[%f,%f,%f]", bmin[0], bmin[1], bmin[2]);
+
+	data += min;
+
+	char max[64];
+
+	sprintf(max, ",\"bmax\":[%f,%f,%f]", bmax[0], bmax[1], bmax[2]);
+
+	data += max;
+
+    data += " }";
+
+    // cells
+
+    data += ",\"cell\":{";
+
+	char scs[64];
+
+	sprintf(scs, "\"cs\":%f", cs);
+
+	data += scs;
+
+	char sch[64];
+
+	sprintf(sch, ",\"ch\":%f", ch);
+
+	data += sch;
+
+    data += " }";
+
+    // polys
+
+    data += ",\"polys\":[";
+
+    for (int i = 0; i < (m_pmesh->maxpolys * 2 * m_pmesh->npolys); i++)
+    {
+        char item[128];
+
+        sprintf(item, "%u,", polys[i]);
+
+        data += item;
+    }
+
+    if (data.compare(data.size()-1, 1, ",") == 0) {
+        data = data.substr(0, data.size()-1);
+    }
+
+    data += " ]";
+
+    // extras
+	char extra[512];
+
+	sprintf(extra, ",\"nverts\":%i,\"npolys\":%i,\"nvp\":%i", m_pmesh->nverts,m_pmesh->npolys,m_pmesh->nvp);
+
+    data += extra;
+
+    data += " }";
+
+    invoke_generic_callback_string(callback, data.c_str());
+}   
+
+//*  struct rcPolyMeshDetail
+//*  {
+//* 	 unsigned int* meshes;	///< The sub-mesh data. [Size: 4*#nmeshes]
+//* 	 float* verts;			///< The mesh vertices. [Size: 3*#nverts]
+//* 	 unsigned char* tris;	///< The mesh triangles. [Size: 4*#ntris]
+//* 	 int nmeshes;			///< The number of sub-meshes defined by #meshes.
+//* 	 int nverts;				///< The number of vertices in #verts.
+//* 	 int ntris;				///< The number of triangles in #tris.
+//*  };
+
+void get_rcPolyMeshDetail(int callback){
+
+    unsigned int* meshes = m_dmesh->meshes;
+    float* verts = m_dmesh->verts;
+    unsigned char* tris = m_dmesh->tris;
+
+    std::string data;
+
+    data = "{";
+
+    // meshes
+	data += "\"meshes\":[";
+
+    for (int i = 0; i < m_dmesh->nmeshes * 4; i++)
+    {
+        char item[32];
+
+        sprintf(item, "%u,", meshes[i]);
+
+        data += item;
+    }
+
+    if (data.compare(data.size()-1, 1, ",") == 0) {
+        data = data.substr(0, data.size()-1);
+    }
+
+    data += " ]";
+
+    // verts
+
+    data += ",\"verts\":[";
+
+    for (int i = 0; i < m_dmesh->nverts * 3; i++)
+    {
+        char item[32];
+
+        sprintf(item, "%f,", verts[i]);
+
+        data += item;
+    }
+
+    if (data.compare(data.size()-1, 1, ",") == 0) {
+        data = data.substr(0, data.size()-1);
+    }
+
+    data += " ]";
+
+    // tris
+
+    data += ",\"tris\":[";
+
+    for (int i = 0; i < m_dmesh->ntris * 4; i++)
+    {
+        char item[128];
+
+        sprintf(item, "%u,", tris[i]);
+
+        data += item;
+    }
+
+    if (data.compare(data.size()-1, 1, ",") == 0) {
+        data = data.substr(0, data.size()-1);
+    }
+
+    data += " ]";
+
+    // extras
+	char extra[512];
+
+	sprintf(extra, ",\"nmeshes\":%i,\"nverts\":%i,\"ntris\":%i", m_dmesh->nmeshes, m_dmesh->nverts, m_dmesh->ntris);
+
+    data += extra;
+
+    data += " }";
+
+    invoke_generic_callback_string(callback, data.c_str());
+}
 
 void getNavHeightfieldRegions(int callback)
 {
@@ -2557,6 +2762,8 @@ EMSCRIPTEN_BINDINGS(my_module) {
     function("buildTiled", &buildTiled);
 
     function("getNavMeshVertices", &getNavMeshVertices);
+    function("get_rcPolyMesh", &get_rcPolyMesh);
+    function("get_rcPolyMeshDetail", &get_rcPolyMeshDetail);
     function("getNavHeightfieldRegions", &getNavHeightfieldRegions);
 
     function("findNearestPoly", &findNearestPoly);

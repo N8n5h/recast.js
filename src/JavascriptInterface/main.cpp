@@ -862,7 +862,7 @@ void get_rcPolyMesh(int callback){
 
     data += ",\"polys\":[";
 
-    for (int i = 0; i < (m_pmesh->maxpolys * 2 * m_pmesh->npolys); i++)
+    for (int i = 0; i < (m_pmesh->maxpolys * 2 * m_pmesh->nvp); i++)
     {
         char item[128];
 
